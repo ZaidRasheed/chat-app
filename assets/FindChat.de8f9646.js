@@ -1,0 +1,1 @@
+import{r as a,f as o,u as c,b as s,O as f,N as h,g as i}from"./index.3e47384e.js";function p(){const[t,u]=a.exports.useState(void 0),{chatId:e}=o(),{getChat:r}=c();return a.exports.useEffect(()=>{const n=r(e,u);return()=>{n()}},[]),t!==null?s(f,{context:{chat:t,chatId:e}}):s(h,{to:"/profile/chats",replace:!0})}function x(){return i()}export{p as default,x as useChatData};
