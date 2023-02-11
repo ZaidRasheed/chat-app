@@ -45,22 +45,36 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                             <div className="flex-1 h-full px-2">
                                 {(chatsList && chatsList?.length > 0) ?
                                     chatsList.sort((a, b) => b[1].lastMessage.date.seconds - a[1].lastMessage.date.seconds).map(chat => {
-                                        const date = new Date(chat[1].lastMessage.date?.seconds! * 1000)
+                                        const date = new Date(chat[1].lastMessage?.date?.seconds! * 1000)
                                         const todaysDate = new Date()
                                         const options: any = { year: 'numeric', month: 'long', day: 'numeric' }
 
-                                        let finalDate
+                                        let lastMessagesDate = null
 
                                         if (date.getDate() === todaysDate.getDate()) {
                                             const hours = date.getHours()
                                             const minutes = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes()
                                             const afterNoon = hours >= 12
-                                            finalDate = (afterNoon ? hours % 12 : hours) + ':' + minutes + (afterNoon ? " PM" : " AM")
+                                            lastMessagesDate = (afterNoon ? hours % 12 : hours) + ':' + minutes + (afterNoon ? " PM" : " AM")
                                         }
                                         else
-                                            finalDate = date.toLocaleDateString('en', options)
+                                            lastMessagesDate = date.toLocaleDateString('en', options)
 
-                                        if (chat[1]?.lastMessage.message)
+
+                                        let lastSeen = null
+                                        if (onlineStatus?.get(chat[1].userInfo.userId)!.lastOnline) {
+                                            const lastSeenDate = new Date(onlineStatus?.get(chat[1].userInfo.userId)!.lastOnline)
+                                            if (lastSeenDate.getDate() === todaysDate.getDate()) {
+                                                const hours = lastSeenDate.getHours()
+                                                const minutes = lastSeenDate.getMinutes() < 10 ? `0${lastSeenDate.getMinutes()}` : lastSeenDate.getMinutes()
+                                                const afterNoon = hours >= 12
+                                                lastSeen = (afterNoon ? hours % 12 : hours) + ':' + minutes + (afterNoon ? " PM" : " AM")
+                                            }
+                                            else
+                                            lastSeen = lastSeenDate.toLocaleDateString('en', options)
+                                        }
+
+                                        if (chat[1]?.lastMessage?.message)
                                             return (
                                                 <div
                                                     onClick={() => navigate(`/profile/chat/${chat[0]}`)}
@@ -73,6 +87,7 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                                 className="absolute w-4 h-4 bg-green-400 rounded-full right-0 bottom-0 border-2 border-white">
                                                             </span> : null}
                                                         </div>
+                                                        {onlineStatus?.get(chat[1].userInfo.userId)!.lastOnline ? <p className='text-xs w-16 text-gray-400'>Last seen {lastSeen}</p> : null}
                                                     </div>
                                                     <div className="flex-1 px-2">
                                                         <div className="truncate w-32"><span className="text-gray-800">{chat[1].userInfo.firstName + ' ' + chat[1].userInfo.lastName}</span>
@@ -80,19 +95,19 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                         <div><small className="text-gray-600">{chat[1]?.lastMessage.message}</small></div>
                                                     </div>
                                                     <div className="flex-2 text-right">
-                                                        <div><small className="text-gray-500">{finalDate}</small></div>
+                                                        <div><small className="text-gray-500">{lastMessagesDate}</small></div>
                                                         {chat[1]?.unOpened?.count > 0 ? <div>
                                                             <small
                                                                 className="text-xs bg-red-500 text-white rounded-full h-6 w-6 leading-6 text-center inline-block">
                                                                 {chat[1]?.unOpened?.count}
                                                             </small>
                                                         </div> : null}
-                                                    </div>
+                                                    </div>            
+                                                                                            
                                                 </div>
                                             )
                                     })
                                     : null}
-
                             </div>
                         </div>
                     </div>

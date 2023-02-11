@@ -6,7 +6,7 @@ export default function useUpdateName({ currentFirstName, currentLastName }: { c
     const [success, setSuccess] = useState<string>('')
     const [loading, setLoading] = useState<boolean>(false)
 
-    const { updateName, refreshUserData } = userAuth()
+    const { updateName } = userAuth()
 
     const firstNameRef = useRef<HTMLInputElement>(null)
     const lastNameRef = useRef<HTMLInputElement>(null)
@@ -36,7 +36,7 @@ export default function useUpdateName({ currentFirstName, currentLastName }: { c
 
         if ((!firstNameRef.current || !firstNameRef.current.value) || (!lastNameRef.current || !lastNameRef.current.value)) {
             setLoading(false)
-            return setError('Please provide valid passwords')
+            return setError('Please provide valid names')
         }
 
         const firstName = firstNameRef.current.value.trim()
@@ -69,7 +69,6 @@ export default function useUpdateName({ currentFirstName, currentLastName }: { c
         updateName(toTitleCase(firstName), toTitleCase(lastName)).then(async res => {
             if (res.status === 'success') {
                 setSuccess(res.message)
-                await refreshUserData()
             }
             else {
                 setError(res.message)

@@ -11,7 +11,6 @@ export default function useResetPassword() {
 
     const { sendResetPasswordLink } = userAuth()
 
-
     function handleOpenModal() {
         setIsOpen(true)
     }

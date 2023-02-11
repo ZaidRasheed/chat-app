@@ -19,7 +19,7 @@ export default function SideBar() {
                         url={user?.profilePictureURL}
                         size="4" />
                 </div>
-                <div className="text-gray-800 mt-8 text-3xl font-medium">
+                <div className="text-gray-800 mt-8 text-3xl font-medium break-words">
                     {user?.firstName} {user?.lastName}
                 </div>
             </div>

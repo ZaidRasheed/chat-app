@@ -54,6 +54,7 @@ export default function useAddUser() {
             setLoading(false)
             return setError(response.message!)
         }
+        setLoading(false)
         handleCloseModal()
         navigate('/profile/chat/' + response.message)
     }

@@ -37,6 +37,7 @@ export default function useSendMessage(chats: DocumentSnapshot | undefined, chat
     function handleScroll() {
         bottomRef.current?.scrollIntoView()
     }
+    
     async function handleSendMessage(e: FormEvent) {
         e.preventDefault()
         if ((!messageRef?.current || !messageRef?.current.value) || !messageRef.current.value.trim())

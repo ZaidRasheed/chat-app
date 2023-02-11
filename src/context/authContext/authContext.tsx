@@ -1,29 +1,19 @@
-import { createContext, useContext, useEffect, useState, ReactElement, useRef } from "react"
+import { createContext, useContext, useEffect, useState, ReactElement } from "react"
 import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    sendPasswordResetEmail,
-    signOut,
-    updatePassword as passwordUpdate,
-    EmailAuthProvider,
-    reauthenticateWithCredential,
-    setPersistence,
-    browserSessionPersistence, signInWithPopup,
-    GoogleAuthProvider, signInWithRedirect
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged,
+    sendPasswordResetEmail, signOut, updatePassword as passwordUpdate,
+    EmailAuthProvider, reauthenticateWithCredential, setPersistence,
+    browserSessionPersistence, User as FirebaseUser, UserCredential
 } from "firebase/auth"
 
 import {
     doc, onSnapshot, Timestamp, Unsubscribe,
     setDoc, getDoc, deleteDoc, updateDoc,
-    arrayUnion, DocumentSnapshot, serverTimestamp,
+    arrayUnion, DocumentSnapshot, serverTimestamp
 } from "firebase/firestore"
 
 import {
-    ref,
-    uploadBytesResumable,
-    getDownloadURL,
-    deleteObject
+    ref, uploadBytesResumable, getDownloadURL, deleteObject
 } from "firebase/storage"
 
 import {
@@ -32,10 +22,7 @@ import {
     set, serverTimestamp as databaseTimestamp
 } from "firebase/database"
 
-
 import { auth, db, storage, database } from "./firebase"
-
-import { User as FirebaseUser, UserCredential } from "firebase/auth"
 
 type VoidResponse = {
     status: string,
@@ -54,7 +41,6 @@ type User = {
     showOnlineStatus: boolean,
     profilePictureURL?: string | undefined
 }
-
 
 interface UserAuthInterface {
     currentUser: FirebaseUser | null
@@ -75,7 +61,6 @@ interface UserAuthInterface {
     changeOnlineStatus: (showOnlineStatus: boolean) => Promise<VoidResponse>
     openMessages: (chatId: string) => void
     updateName: (firstName: string, lastName: string) => Promise<VoidResponse>
-    refreshUserData: () => Promise<void>
 }
 
 const UserContext = createContext<UserAuthInterface | null>(null)
@@ -88,34 +73,35 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
     const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null)
     const [fireStoreUser, setFireStoreUser] = useState<User | null>(null)
     const [chats, setChats] = useState<DocumentSnapshot>()
-    const idRef = useRef<string>('')
     const [onlineStatus, setOnlineStatus] = useState<Map<string, {}>>()
     const [loading, setLoading] = useState<boolean>(true)
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            let unSub = (): void => { }
             if (user) {
                 setCurrentUser(user)
-                idRef.current = user.uid
                 try {
-                    await setUserData(user.uid)
-                    unSub = onSnapshot(doc(db, "userChats", user.uid), (userChats) => {
+                    const unSub1 = onSnapshot(doc(db, "userChats", user.uid), (userChats) => {
                         setChats(userChats)
                     })
+                    const unSub2 = onSnapshot(doc(db, "users", user.uid), (userData) => {
+                        setUserData(userData)
+                    })
                     setLoading(false)
+                    return () => {
+                        unSub1()
+                        unSub2()
+                    }
                 }
                 catch (error) {
                     setCurrentUser(null)
                     logOut()
-                    unSub()
                     setLoading(false)
                 }
             }
             else {
                 setCurrentUser(null)
                 setFireStoreUser(null)
-                unSub()
                 setLoading(false)
             }
         })
@@ -127,53 +113,48 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
     }, [])
 
     useEffect(() => {
-        try {
-            if (currentUser?.uid && fireStoreUser?.showOnlineStatus) {
-                const myConnectionRef = databaseRef(database, `connections/${currentUser.uid}`)
-                const connectedRef = databaseRef(database, '.info/connected')
-                onValue(connectedRef, (snap) => {
-                    if (snap.val() === true) {
-                        set(myConnectionRef, {
-                            connected: true,
-                        })
-                        onDisconnect(myConnectionRef).set({
-                            connected: false,
-                            lastOnline: databaseTimestamp()
-                        })
-                    }
-                })
+        if (currentUser?.uid && fireStoreUser?.showOnlineStatus) {
+            const myConnectionRef = databaseRef(database, `connections/${currentUser.uid}`)
+            const connectedRef = databaseRef(database, '.info/connected')
+            const unsubscribe = onValue(connectedRef, (snap) => {
+                if (snap.val() === true) {
+                    set(myConnectionRef, {
+                        connected: true,
+                    })
+                    onDisconnect(myConnectionRef).set({
+                        connected: false,
+                        lastOnline: databaseTimestamp()
+                    })
+                }
+            })
+            return () => {
+                unsubscribe()
             }
-            else if (idRef.current.length) {
-                const myConnectionRef = databaseRef(database, `connections/${idRef.current}`)
-                set(myConnectionRef, {
-                    connected: false,
-                    lastOnline: databaseTimestamp()
-                })
-            }
-        } catch (error) {
-            console.log(error)
         }
     }, [currentUser?.uid, fireStoreUser?.showOnlineStatus])
 
     useEffect(() => {
-        if (currentUser?.uid) {
-            try {
-                const connectionsRef = databaseRef(database, 'connections')
-                onValue(connectionsRef, data => {
+        if (chats?.data()) {
+            const connectionsRef = databaseRef(database, 'connections')
+            const unsubscribe = onValue(connectionsRef, data => {
+                try {
                     const allChats = Object.entries(chats?.data()!)
                     const onlineStatus = new Map<string, {}>()
                     allChats.forEach(chat => {
-                        onlineStatus.set(chat[1].userInfo.userId, {
-                            ...data.child(chat[1].userInfo.userId).toJSON()
+                        onlineStatus.set(chat[1].userInfo?.userId, {
+                            ...data.child(chat[1].userInfo?.userId).toJSON()
                         })
                     })
                     setOnlineStatus(onlineStatus)
-                })
-            } catch (error) {
-                console.log(error)
+                } catch (error) {
+                    console.log(error)
+                }
+            })
+            return () => {
+                unsubscribe()
             }
         }
-    }, [JSON.stringify(chats)])
+    }, [chats])
 
     async function changeOnlineStatus(showOnlineStatus: boolean): Promise<VoidResponse> {
         try {
@@ -182,13 +163,12 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
                 showOnlineStatus: showOnlineStatus
             })
             if (!showOnlineStatus) {
-                const myConnectionRef = databaseRef(database, `connections/${idRef.current}`)
+                const myConnectionRef = databaseRef(database, `connections/${currentUser?.uid}`)
                 set(myConnectionRef, {
                     connected: false,
-                    lastOnline: databaseTimestamp()
+                    // lastOnline: databaseTimestamp()
                 })
             }
-            await setUserData(currentUser?.uid!)
             return { status: 'success', message: `Status updated successfully to ${showOnlineStatus ? 'show online status' : 'hide online status'}.` }
         } catch (error) {
             return { status: 'error', message: 'Error in updating online status please try again later.' }
@@ -229,6 +209,13 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
     }
 
     function logOut() {
+        if (fireStoreUser?.showOnlineStatus) {
+            const myConnectionRef = databaseRef(database, `connections/${currentUser?.uid}`)
+            set(myConnectionRef, {
+                connected: false,
+                lastOnline: databaseTimestamp()
+            })
+        }
         signOut(auth)
     }
 
@@ -311,8 +298,6 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
                     profilePictureURL: downloadURL
                 })
 
-                await setUserData(userId)
-
                 await updateProfilePictureInAllChats(downloadURL)
 
                 return { status: 'success', message: 'Profile picture updated successfully' }
@@ -350,6 +335,7 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
             return { status: 'success', message: 'Account successfully created.' }
         }
         catch (error: any) {
+            console.log(error)
             return { status: 'error', message: error.message }
         }
     }
@@ -385,33 +371,22 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
         }
     }
 
-    async function setUserData(userId: string): Promise<void> {
+    async function setUserData(data: DocumentSnapshot): Promise<void> {
         try {
-            const userRef = doc(db, 'users', userId)
-            const user = await getDoc(userRef)
-            if (user.exists()) {
+
+            if (data.exists()) {
                 const fireStoreUser: User = {
-                    email: user.data()!.email!,
-                    firstName: user.data()!.firstName!,
-                    lastName: user.data()!.lastName!,
-                    userId: user.data()!.userId!,
-                    showOnlineStatus: user.data()!.showOnlineStatus!,
-                    profilePictureURL: user.data()!.profilePictureURL || undefined
+                    email: data.data()!.email!,
+                    firstName: data.data()!.firstName!,
+                    lastName: data.data()!.lastName!,
+                    userId: data.data()!.userId!,
+                    showOnlineStatus: data.data()!.showOnlineStatus!,
+                    profilePictureURL: data.data()!.profilePictureURL || undefined
                 }
                 setFireStoreUser(fireStoreUser)
             }
         } catch (error) {
             console.log(error)
-        }
-    }
-
-    async function refreshUserData(): Promise<void> {
-        if (currentUser?.uid) {
-            try {
-                setUserData(currentUser.uid)
-            } catch (error) {
-                console.log(error)
-            }
         }
     }
 
@@ -511,14 +486,17 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
                     otherChatUser?.userId + currentUser?.uid!
 
 
+            if (chats?.data()![combinedId])
+                return { status: 'error', message: 'User already added' }
+
+
             const chatRef = doc(db, 'chats', combinedId)
-            const found = await getDoc(chatRef)
-
-            if (found.exists()) {
-                return { status: 'error', message: 'user already added' }
-            }
-
-            await setDoc(chatRef, { active: true, messages: [] })
+            await setDoc(chatRef, {
+                active: true,
+                user1: currentUser?.uid,
+                user2: otherChatUser?.userId,
+                messages: []
+            })
 
             const currentUserChatRef = doc(db, 'userChats', currentUser?.uid!)
             await updateDoc(currentUserChatRef, {
@@ -529,7 +507,7 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
                     ...(otherChatUser?.profilePictureURL && otherChatUser?.profilePictureURL)
                 },
                 [combinedId + ".lastMessage"]: {
-                    date: serverTimestamp()
+
                 },
                 [combinedId + ".unOpened"]: {
                     count: 0
@@ -545,7 +523,7 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
                     profilePictureURL: fireStoreUser?.profilePictureURL ? fireStoreUser?.profilePictureURL : '',
                 },
                 [combinedId + '.lastMessage']: {
-                    date: serverTimestamp()
+
                 },
                 [combinedId + ".unOpened"]: {
                     count: 0
@@ -574,7 +552,6 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
 
             const chatRef = doc(db, 'chats', chatId)
             await updateDoc(chatRef, {
-                active: true,
                 messages: arrayUnion(message)
             })
 
@@ -585,21 +562,19 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
                     message: text
                 }
             })
+
             const receiverUserChatRef = doc(db, 'userChats', receiverId)
+            const userChats = await getDoc(receiverUserChatRef)
             await updateDoc(receiverUserChatRef, {
                 [chatId + ".lastMessage"]: {
                     date: serverTimestamp(),
                     message: text,
-                }
-            })
-
-            const userChats = await getDoc(receiverUserChatRef)
-
-            await updateDoc(receiverUserChatRef, {
+                },
                 [chatId + ".unOpened"]: {
                     count: Object.entries(userChats?.data()!)[0][1].unOpened.count + 1
                 }
             })
+
             return { status: 'success', message: 'Message sent successfully' }
 
         } catch (error: any) {
@@ -666,7 +641,6 @@ export default function AuthContextProvider({ children }: { children: ReactEleme
             changeOnlineStatus,
             openMessages,
             updateName,
-            refreshUserData,
         }}>
             {!loading && children}
         </UserContext.Provider>

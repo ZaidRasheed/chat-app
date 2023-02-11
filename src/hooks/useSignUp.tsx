@@ -60,7 +60,7 @@ export default function useSignUp() {
 
         if (firstName.length < 2 || lastName.length < 2) {
             setLoading(false)
-            return setError('Please provide valid first and last names.')
+            return setError('Please provide valid first and last name.')
         }
 
         const regName = /^[a-zA-Z ]+$/
@@ -101,7 +101,6 @@ export default function useSignUp() {
                 return setError('Photo is too big, maximum size for profile pictures is 1MB')
             }
         }
-
 
         try {
             const res = await signUpWithEmail(firstName, lastName, email, password, profilePicture)
