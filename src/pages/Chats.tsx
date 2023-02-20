@@ -87,12 +87,12 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                                 className="absolute w-4 h-4 bg-green-400 rounded-full right-0 bottom-0 border-2 border-white">
                                                             </span> : null}
                                                         </div>
-                                                        {onlineStatus?.get(chat[1].userInfo.userId)!.lastOnline ? <p className='text-xs w-16 text-gray-400'>Last seen {lastSeen}</p> : null}
                                                     </div>
-                                                    <div className="flex-1 px-2">
-                                                        <div className="truncate w-32"><span className="text-gray-800">{chat[1].userInfo.firstName + ' ' + chat[1].userInfo.lastName}</span>
+                                                    <div className="flex-1 px-3">
+                                                        <div className="truncate w-32"><span className="text-lg text-gray-800">{chat[1].userInfo.firstName + ' ' + chat[1].userInfo.lastName}</span>
                                                         </div>
-                                                        <div><small className="text-gray-600">{chat[1]?.lastMessage.message}</small></div>
+                                                        <div ><span className="text-sm text-gray-600">{chat[1]?.lastMessage.message}</span></div>
+                                                        {onlineStatus?.get(chat[1].userInfo.userId)?.lastOnline ? <p className='text-xs w-18 mt-1 text-gray-400'>Last seen {lastSeen}</p> : null}
                                                     </div>
                                                     <div className="flex-2 text-right">
                                                         <div><small className="text-gray-500">{lastMessagesDate}</small></div>

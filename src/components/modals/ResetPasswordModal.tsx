@@ -68,7 +68,7 @@ export default function ResetPasswordModal() {
                         </div>
 
                         <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
-                            <button disabled={loading} onClick={handleSubmit} type="button" className="transition duration-200 ease-in-out disabled:opacity-25 text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
+                            <button disabled={loading} onClick={handleSubmit} type="button" className="transition duration-200 ease-in-out disabled:opacity-25 text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Send</button>
                         </div>
                     </div>
                 </div>

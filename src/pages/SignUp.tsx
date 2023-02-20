@@ -1,7 +1,7 @@
 import useSignUp from "../hooks/useSignUp"
 import MainHeader from "../components/layout/MainHeader"
-export default function SignUp() {
 
+export default function SignUp() {
     const {
         firstNameRef,
         lastNameRef,
@@ -15,7 +15,6 @@ export default function SignUp() {
         error,
         closeErrorAlert
     } = useSignUp()
-
 
     return (
         <><MainHeader />

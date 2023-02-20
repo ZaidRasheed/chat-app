@@ -1,5 +1,6 @@
 import { useState, useRef, FormEvent } from 'react'
 import { userAuth } from '../context/authContext/authContext'
+
 export default function useUpdateName({ currentFirstName, currentLastName }: { currentFirstName: string | undefined, currentLastName: string | undefined }) {
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [error, setError] = useState<string>('')

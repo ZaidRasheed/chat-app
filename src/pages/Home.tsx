@@ -1,5 +1,5 @@
 import MainLayout from "../components/layout/MainLayout"
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense } from 'react'
 import LoadingSpinner from "../components/UI/LoadingSpinner"
 import { Routes, Route } from 'react-router-dom'
 import { userAuth } from "../context/authContext/authContext"
@@ -13,7 +13,6 @@ const ChatsErrorPage = lazy(() => import('../components/ChatsErrorPage'))
 
 export default function Home() {
     const { chats } = userAuth()
-
 
     return (
         <MainLayout>

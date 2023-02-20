@@ -1,7 +1,6 @@
 import useUpdateName from "../../hooks/useUpdateName"
 
 export default function ChangeNameModal({ currentFirstName, currentLastName }: { currentFirstName: string | undefined, currentLastName: string | undefined }) {
-
     const {
         isOpen,
         error,

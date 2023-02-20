@@ -1,5 +1,4 @@
 import { userAuth } from "../context/authContext/authContext"
-
 import Header from "../components/layout/Header"
 import DeleteAccountModal from "../components/modals/DeleteAccountModal"
 import UpdatePasswordModal from "../components/modals/UpdatePasswordModal"
@@ -9,7 +8,6 @@ import Avatar from "../components/UI/Avatar"
 import { useState } from "react"
 
 export default function Settings() {
-
     const { fireStoreUser: user } = userAuth()
     const [copied, setCopied] = useState<boolean>(false)
     function copyUserId() {
