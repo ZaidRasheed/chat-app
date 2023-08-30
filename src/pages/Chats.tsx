@@ -62,7 +62,8 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
 
 
                                         let lastSeen = null
-                                        if (onlineStatus?.get(chat[1].userInfo.userId)!.lastOnline) {
+
+                                        if (onlineStatus?.get(chat[1].userInfo.userId)?.lastOnline) {
                                             const lastSeenDate = new Date(onlineStatus?.get(chat[1].userInfo.userId)!.lastOnline)
                                             if (lastSeenDate.getDate() === todaysDate.getDate()) {
                                                 const hours = lastSeenDate.getHours()
@@ -71,7 +72,7 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                 lastSeen = (afterNoon ? hours % 12 : hours) + ':' + minutes + (afterNoon ? " PM" : " AM")
                                             }
                                             else
-                                            lastSeen = lastSeenDate.toLocaleDateString('en', options)
+                                                lastSeen = lastSeenDate.toLocaleDateString('en', options)
                                         }
 
                                         if (chat[1]?.lastMessage?.message)
@@ -83,7 +84,7 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                     <div className="flex-2">
                                                         <div className="w-12 h-12 relative">
                                                             <Avatar name={chat[1].userInfo.firstName + ' ' + chat[1].userInfo.lastName} url={chat[1].userInfo.profilePictureURL} size='1' />
-                                                            {onlineStatus?.get(chat[1].userInfo.userId)!.connected! === true ? <span
+                                                            {onlineStatus?.get(chat[1]?.userInfo.userId)?.connected! === true ? <span
                                                                 className="absolute w-4 h-4 bg-green-400 rounded-full right-0 bottom-0 border-2 border-white">
                                                             </span> : null}
                                                         </div>
@@ -92,7 +93,7 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                         <div className="truncate w-32"><span className="text-lg text-gray-800">{chat[1].userInfo.firstName + ' ' + chat[1].userInfo.lastName}</span>
                                                         </div>
                                                         <div ><span className="text-sm text-gray-600">{chat[1]?.lastMessage.message}</span></div>
-                                                        {onlineStatus?.get(chat[1].userInfo.userId)?.lastOnline ? <p className='text-xs w-18 mt-1 text-gray-400'>Last seen {lastSeen}</p> : null}
+                                                        {onlineStatus?.get(chat[1]?.userInfo.userId)?.lastOnline ? <p className='text-xs w-18 mt-1 text-gray-400'>Last seen {lastSeen}</p> : null}
                                                     </div>
                                                     <div className="flex-2 text-right">
                                                         <div><small className="text-gray-500">{lastMessagesDate}</small></div>
@@ -102,8 +103,8 @@ export default function Chats({ chats }: { chats: DocumentSnapshot | undefined }
                                                                 {chat[1]?.unOpened?.count}
                                                             </small>
                                                         </div> : null}
-                                                    </div>            
-                                                                                            
+                                                    </div>
+
                                                 </div>
                                             )
                                     })
